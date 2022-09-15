@@ -4,35 +4,31 @@ header('Content-type: application/json');
 $header[] = "Content-type: text/json";
 $header[] = "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586";
 
-$header_ip = mt_rand(11, 191) . "." . mt_rand(0, 240) . "." . mt_rand(1, 240) . "." . mt_rand(1, 240);
-$header_get[] = "Content-type: text/json";
-$header_get[] = "CLIENT-IP: ".$header_ip;
-$header_het[] = "X-FORWARDED-FOR: ".$header_ip;
-$header_get[] = "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) nuoxian/API";
-
 if (isset($_GET['uuid']) || isset($_GET['id'])) {
     $uuid = @$_GET['uuid'];
-    
     $curl = curl_init();
-    $curl_id = curl_init();
     
     if (!empty($_GET['id'])) {
         $id = @$_GET['id'];
+        $curl_id = curl_init();
         
-        curl_setopt($curl_id, CURLOPT_URL, "https://api.nxvav.cn/api/mc/?id=".$id);
+        curl_setopt($curl_id, CURLOPT_URL, "https://api.mojang.com/users/profiles/minecraft/".$id);
         curl_setopt($curl_id, CURLOPT_HEADER, false);
-        curl_setopt($curl_id, CURLOPT_HTTPHEADER, $header_get);
+        curl_setopt($curl_id, CURLOPT_HTTPHEADER, $header);
         curl_setopt($curl_id, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl_id, CURLOPT_TIMEOUT, 180);
         curl_setopt($curl_id, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl_id, CURLOPT_SSL_VERIFYHOST, false);
         $uuid = json_decode(curl_exec($curl_id), true);
-        $uuid = $uuid['uuid'];
-
         curl_close($curl_id);
+        
+        if (isset($uuid['error']) || $uuid == NULL) {
+            exit(json_encode(array('code'=>'201','msg'=>'查询失败'),JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+        } else {
+            $uuid = $uuid['id'];
+        }
     } else {
         curl_setopt($curl, CURLOPT_URL, "https://sessionserver.mojang.com/session/minecraft/profile/".$uuid."?unsigned=false");
-        curl_close($curl_id);
     }
     
     curl_setopt($curl, CURLOPT_URL, "https://sessionserver.mojang.com/session/minecraft/profile/".$uuid."?unsigned=false");
